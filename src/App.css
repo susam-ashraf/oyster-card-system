@@ -1,7 +1,17 @@
 .App {
   text-align: center;
 }
-
+.radio_wrap{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.p-radiobutton .p-radiobutton-box {
+  margin-top: 15px;
+}
+.radio_wrap p{
+  margin-left: 10px;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;

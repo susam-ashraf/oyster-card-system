@@ -10,6 +10,7 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
+import { RadioButton } from 'primereact/radiobutton';
 
 import logo from './logo.svg';
 import './App.css';
@@ -17,11 +18,14 @@ import axios from "axios";
 
 function App() {
 
-
     let currencyNamesGlobal = [];
 
   const [text, setText] = useState('');
   const toastRef = useRef();
+
+    const [balance, setBalance] = useState(30);
+    const [transportType, setTransportType] = useState(null);
+
 
     const [convertedValue, setConvertedValue] = useState('');
     const [value1, setValue1] = useState('');
@@ -139,19 +143,29 @@ function App() {
 
       <Toast ref={toastRef} />
 
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-      </header>
+      {/*<header className="App-header">*/}
+      {/*  <img src={logo} className="App-logo" alt="logo" />*/}
+      {/*</header>*/}
+<br/><br/><br/>
+      <h1>Balance : £{balance}</h1>
+      <h1>{transportType}</h1>
+        <br/><br/><br/>
+        <div className="radio_wrap">
+            <RadioButton value="tube" name="type" onChange={(e) => setTransportType(e.value)} checked={transportType === 'tube'} />
+            <p>Tube</p>
+        </div>
+        <div className="radio_wrap">
+            <RadioButton value="bus" name="type" onChange={(e) => setTransportType(e.value)} checked={transportType === 'bus'} />
+            <p>Bus</p>
+        </div>
+
+
 
       <form className="p-d-flex p-jc-center p-mt-6" onSubmit={onFormSubmit}>
         {/*<InputText value={text} onChange={(e) => setText(e.target.value)} />*/}
         {/*<Button type="submit" label="Submit" icon="pi pi-check" className="p-ml-2"/>*/}
 
-          <div>
-              <h4>Amount</h4>
-              <br/>
-              <InputText value={value1} onChange={(e) => setValue1(e.target.value)}/>
-          </div>
+
           <div>
             <h4>From</h4>
             <br/>
