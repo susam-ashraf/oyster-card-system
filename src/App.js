@@ -1,188 +1,206 @@
 import React, {useState, useRef, useEffect} from 'react';
-
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import { Toast } from 'primereact/toast';
+import {Button} from 'primereact/button';
+import {Toast} from 'primereact/toast';
 import PrimeReact from 'primereact/api';
-import { AutoComplete } from 'primereact/autocomplete';
-
+import {AutoComplete} from 'primereact/autocomplete';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
-import { RadioButton } from 'primereact/radiobutton';
-
-import logo from './logo.svg';
+import {RadioButton} from 'primereact/radiobutton';
 import './App.css';
-import axios from "axios";
 
 function App() {
 
-    let currencyNamesGlobal = [];
-
-  const [text, setText] = useState('');
-  const toastRef = useRef();
-
+    const toastRef = useRef();
     const [balance, setBalance] = useState(30);
     const [transportType, setTransportType] = useState(null);
+    const [startStation, setStartStation] = useState(null);
+    const [destinationStation, setDestinationStation] = useState(null);
+    const [stations, setStations] = useState([
+        {"name": "Holborn"},
+        {"name": "Earl’s Court"},
+        {"name": "Wimbledon"},
+        {"name": "Hammersmith"},
+        {"name": "Chelsea"},
+    ]);
+    const [filteredStations, setFilteredStations] = useState(null);
 
-
-    const [convertedValue, setConvertedValue] = useState('');
-    const [value1, setValue1] = useState('');
-    const [value3, setValue3] = useState('');
-    const [selectedCountry2, setSelectedCountry2] = useState(null);
-    const [destinationCurrency, setSelectedDestinationCurrency] = useState(null);
-    const [countries, setCountries] = useState([]);
-    const [filteredCountries, setFilteredCountries] = useState(null);
-
-  // active ripple effect
-  PrimeReact.ripple = true;
-
-
+    // active ripple effect
+    PrimeReact.ripple = true;
 
     useEffect(() => {
 
-        getCountries();
-
-
     }, []);
 
-    const getCountries = () => {
-        return axios.get('http://api.currencylayer.com/list?access_key=1e8cd3ce10e28f54775c8989af651940&format=1')
-            .then((res) => {
 
-                let object1 = res.data.currencies;
+    const getZone = (station) => {
 
-                for (const [key, value] of Object.entries(object1)) {
-                    currencyNamesGlobal.push(
-                        {"name": `${key} - ${value}`, "unit": `${key}`}
-                    );
-                };
+        let zone;
 
-                setCountries(currencyNamesGlobal);
+        switch (station) {
+            case 'Holborn':
+                zone = 1;
+                break;
+            case 'Earl’s Court':
+                zone = [1, 2];
+                break;
+            case 'Wimbledon':
+                zone = 3;
+                break;
+            case 'Hammersmith':
+                zone = 2;
+                break;
+            case 'Chelsea':
+                zone = 4;
+                break;
+        }
+        return zone;
+    }
+    const getFare = (starting_zone, end_zone) => {
 
+        console.log(starting_zone);
+        console.log(end_zone);
 
-            });
-    };
+        if (Array.isArray(starting_zone) || Array.isArray(end_zone)) {
+            if (Array.isArray(starting_zone)) {
 
-    const storeDataToServer = () => {
-        console.log('inside store to server----');
-        console.log(setConvertedValue);
+                let fairArray = starting_zone.map(item => {
+                    if (item === 1 && end_zone === 1) {
+                        return 2.50;
+                    } else if (item !== 1 && item === end_zone) {
+                        return 2.00;
+                    } else if (item === 1 || end_zone === 1) {
+                        return 3.00;
+                    } else if (item !== end_zone && item !== 1 && end_zone !== 1) {
+                        return 2.25;
+                    }
+                });
 
-        return axios.post('http://34d342e6229f.ngrok.io/dashboard/public/api/store/currency', { amount : value1, from : selectedCountry2.unit, to : destinationCurrency.unit, converted: 80, converted_to_usd: 80 })
-            .then((res) => {
+                // Returning the lowest fair
 
-                console.log('Store--------/---------');
+                return Math.min(...fairArray);
 
-                console.log(res);
+            } else {
+                let fairArray = end_zone.map(item => {
+                    if (starting_zone === 1 && item === 1) {
+                        return 2.50;
+                    } else if (starting_zone !== 1 && starting_zone === item) {
+                        return 2.00;
+                    } else if (starting_zone === 1 || item === 1) {
+                        return 3.00;
+                    } else if (starting_zone !== item && starting_zone !== 1 && item !== 1) {
+                        return 2.25;
+                    }
+                });
 
-
-            });
-    };
-
-    const convertCurrency = () => {
-
-        return axios.get(`https://free.currconv.com/api/v7/convert?q=${selectedCountry2.unit}_${destinationCurrency.unit}&compact=ultra&apiKey=2c47ef9027a093d41e2e`)
-            .then((res) => {
-                console.log(res);
-                console.log(res.data);
-
-
-                let objt = `${selectedCountry2.unit}_${destinationCurrency.unit}`;
-
-                let total = res.data[objt] * value1;
-                console.log('converted --------');
-                console.log(total);
-
-                setConvertedValue(total.toFixed(2));
-
-
-            });
-    };
-
-
-    const searchCountry = (event) => {
-        setTimeout(() => {
-            let _filteredCountries;
-            if (!event.query.trim().length) {
-                _filteredCountries = [...countries];
+                // Returning the lowest fair
+                return Math.min(...fairArray);
             }
-            else {
-                _filteredCountries = countries.filter((country) => {
-                    return country.name.toLowerCase().startsWith(event.query.toLowerCase());
+        } else {
+            if (starting_zone === 1 && end_zone === 1) {
+                return 2.50;
+            } else if (starting_zone !== 1 && starting_zone === end_zone) {
+                return 2.00;
+            } else if (starting_zone === 1 || end_zone === 1) {
+                return 3.00;
+            } else if (starting_zone !== end_zone && starting_zone !== 1 && end_zone !== 1) {
+                return 2.25;
+            }
+        }
+    }
+
+    const calculateFare = () => {
+        let startingZone = getZone(startStation.name);
+        let endZone = getZone(destinationStation.name);
+        let fare;
+
+        if (transportType === 'tube') {
+            fare = getFare(startingZone, endZone);
+
+            console.log('------fare');
+            console.log(fare);
+        } else if (transportType === 'bus') {
+            fare = 1.80;
+        } else {
+            fare = 0;
+        }
+
+        setBalance((balance + 3.20) - fare);
+
+    }
+
+    const maxFare = () => {
+        setBalance(balance - 3.20);
+    }
+
+
+    const searchStation = (event) => {
+        setTimeout(() => {
+            let _filteredStation;
+            if (!event.query.trim().length) {
+                _filteredStation = [...stations];
+            } else {
+                _filteredStation = stations.filter((station) => {
+                    return station.name.toLowerCase().startsWith(event.query.toLowerCase());
                 });
             }
 
-            setFilteredCountries(_filteredCountries);
+            setFilteredStations(_filteredStation);
         }, 250);
     }
-
-  const onFormSubmit = async (e) => {
-
-      e.preventDefault();
-
-      await convertCurrency();
-
-      await storeDataToServer();
-
-      console.log(selectedCountry2);
-
-  }
 
     const itemTemplate = (item) => {
         return (
             <div className="country-item">
-                {/*<img alt={item.name} src={`showcase/demo/images/flag_placeholder.png`} onError={(e) => e.target.src='https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png'} className={`flag flag-${item.code.toLowerCase()}`} />*/}
                 <div>{item.name}</div>
             </div>
         );
     }
 
-  return (
-    <div className="App">
-
-      <Toast ref={toastRef} />
-
-      {/*<header className="App-header">*/}
-      {/*  <img src={logo} className="App-logo" alt="logo" />*/}
-      {/*</header>*/}
-<br/><br/><br/>
-      <h1>Balance : £{balance}</h1>
-      <h1>{transportType}</h1>
-        <br/><br/><br/>
-        <div className="radio_wrap">
-            <RadioButton value="tube" name="type" onChange={(e) => setTransportType(e.value)} checked={transportType === 'tube'} />
-            <p>Tube</p>
-        </div>
-        <div className="radio_wrap">
-            <RadioButton value="bus" name="type" onChange={(e) => setTransportType(e.value)} checked={transportType === 'bus'} />
-            <p>Bus</p>
-        </div>
-
-
-
-      <form className="p-d-flex p-jc-center p-mt-6" onSubmit={onFormSubmit}>
-        {/*<InputText value={text} onChange={(e) => setText(e.target.value)} />*/}
-        {/*<Button type="submit" label="Submit" icon="pi pi-check" className="p-ml-2"/>*/}
-
-
-          <div>
-            <h4>From</h4>
+    return (
+        <div className="App">
+            <Toast ref={toastRef}/>
+            <br/><br/>
+            <h1>Oyster Card Balance : £ <span style={{color: '#2196F3'}}>{balance}</span></h1>
             <br/>
-            <AutoComplete value={selectedCountry2} suggestions={filteredCountries} completeMethod={searchCountry} field="unit" dropdown forceSelection itemTemplate={itemTemplate} onChange={(e) => setSelectedCountry2(e.value)} />
-          </div>
-          <div>
-              <h4>To</h4>
-            <br/>
-            <AutoComplete value={destinationCurrency} suggestions={filteredCountries} completeMethod={searchCountry} field="unit" dropdown forceSelection itemTemplate={itemTemplate} onChange={(e) => setSelectedDestinationCurrency(e.value)} />
-          </div>
-          <Button type="submit" label="Submit" icon="pi pi-check" className="p-ml-2"/>
-      </form>
+            <div className="radio_outer">
+                <div className="radio_wrap">
+                    <RadioButton value="tube" name="type" onChange={(e) => setTransportType(e.value)}
+                                 checked={transportType === 'tube'}/>
+                    <p>Tube</p>
+                </div>
+                <div className="radio_wrap">
+                    <RadioButton value="bus" name="type" onChange={(e) => setTransportType(e.value)}
+                                 checked={transportType === 'bus'}/>
+                    <p>Bus</p>
+                </div>
+            </div>
 
-        <h1>{convertedValue}</h1>
+            <div className="select-station">
+                <div>
+                    <h4>Starting Station</h4>
+                    <br/>
+                    <AutoComplete value={startStation} suggestions={filteredStations} completeMethod={searchStation}
+                                  field="name" dropdown forceSelection itemTemplate={itemTemplate}
+                                  onChange={(e) => setStartStation(e.value)}/>
+                </div>
+                <div>
+                    <h4>Destination</h4>
+                    <br/>
+                    <AutoComplete value={destinationStation} suggestions={filteredStations}
+                                  completeMethod={searchStation}
+                                  field="name" dropdown forceSelection itemTemplate={itemTemplate}
+                                  onChange={(e) => setDestinationStation(e.value)}/>
+                </div>
+            </div>
+            <div className="buttons-custom">
+                <Button type="button" label="Enter Station" onClick={maxFare} icon="pi pi-check" className="p-ml-2 m-r-50"/>
+                <Button type="button" label="Exit Station" onClick={calculateFare} icon="pi pi-check" className="p-ml-2"/>
+            </div>
 
-    </div>
-  );
+        </div>
+    );
 }
 
 export default App;

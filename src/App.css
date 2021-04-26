@@ -5,12 +5,25 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  margin-right: 45px;
 }
 .p-radiobutton .p-radiobutton-box {
   margin-top: 15px;
 }
 .radio_wrap p{
   margin-left: 10px;
+}
+.select-station{
+  display: flex;
+  justify-content: space-evenly;
+  margin-bottom: 50px;
+}
+.radio_outer {
+  display: flex;
+  justify-content: center;
+}
+.m-r-50{
+  margin-right: 50px;
 }
 .App-logo {
   height: 40vmin;
